@@ -1,0 +1,36 @@
+
+"""
+Lexbot Lambda handler.
+"""
+
+import json 
+import urllib3
+
+http =  urllib3.PoolManager()
+
+def sendEmail(name,mobile_number,email, messages): 
+    data= {"email":email, "mobile_number" :mobile_number, "messages" :messages, "name":name}
+    encoded_data = json.dumps(data).encode('utf-8')
+    response = http.request('POST',"http://adbcf45019ce.ngrok.io",headers={'Content-Type': 'application/json'},body = encoded_data)
+    return response.data.decode('utf-8')
+
+def lambda_handler(event, context):
+    name = event['currentIntent']['slots']['name']
+    mobile_number = event['currentIntent']['slots']['mobile_number']
+    email = event['currentIntent']['slots']['emailId']
+    messages = event['inputTranscript']
+    print(messages)
+    result = sendEmail(name,mobile_number,email,messages)
+    response = {
+        "dialogAction": {
+            "type": "Close",
+            "fulfillmentState": "Fulfilled",
+            "message": {
+              "contentType": "SSML",
+              "content": "{} Please let us know if we can assist you with any other information.".format(result)
+            },
+        }
+    }
+    #print('result = ' +str(response))
+    return response
+ 
